@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>天白区 電池回収マップ</title>
+
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      color: #183b31;
+      background: #f2f7f4;
+    }
+
+    header { padding: 20px; }
+
+    h1 { margin: 0 0 10px; font-size: 24px; }
+
+    p { margin: 8px 0; line-height: 1.7; }
+
+    #map {
+      height: 65vh;
+      min-height: 350px;
+      width: 100%;
+    }
+
+    footer { padding: 16px 20px; font-size: 13px; }
+
+    .leaflet-popup-content { line-height: 1.8; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>天白区 電池回収マップ</h1>
+    <p>リチウムイオン電池などの回収協力先を探せます。</p>
+    <p>掲載３か所｜ピンを押すと詳細を表示</p>
+  </header>
+
+  <main>
+    <div id="map" aria-label="天白区の電池回収場所の地図"></div>
+  </main>
+
+  <footer>
+    <p>
+      出典：利用者がJBRCの検索結果から作成した一覧。
+      受付時間・対象製品・持ち込み条件は各施設へ確認してください。
+      ボックスの設置有無・館内の受付位置は未確認です。
+    </p>
+    <a href="https://www.jbrc.com/general/recycle_kensaku/"
+       target="_blank" rel="noopener noreferrer">
+      JBRCの公式案内を見る
+    </a>
+    <p id="status" role="status"></p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const locations = [
+      {
+        name: "ゲオ焼山店",
+        address: "愛知県名古屋市天白区焼山1-314",
+        phone: "052-800-1881",
+        lat: 35.145667,
+        lng: 136.993694
+      },
+      {
+        name: "ホダカ天白店",
+        address: "愛知県名古屋市天白区中平1-217",
+        phone: "052-800-8141",
+        lat: 35.124085,
+        lng: 136.999354
+      },
+      {
+        name: "天白環境事業所",
+        address: "愛知県名古屋市天白区元八事5-231",
+        phone: "052-833-4031",
+        lat: 35.130320,
+        lng: 136.980068
+      }
+    ];
+
+    if (typeof L === "undefined") {
+      document.getElementById("status").textContent =
+        "地図を読み込めませんでした。インターネット接続を確認して再読み込みしてください。";
+    } else {
+      const map = L.map("map");
+
+      const tiles = L.tileLayer(
+        "https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png",
+        {
+          maxZoom: 18,
+          attribution:
+            '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地理院タイル</a>'
+        }
+      ).addTo(map);
+
+      tiles.on("tileerror", function () {
+        document.getElementById("status").textContent =
+          "背景地図を読み込めません。インターネット接続を確認してください。";
+      });
+
+      const markers = locations.map(function (place) {
+        const destination = encodeURIComponent(
+          place.address + " " + place.name
+        );
+
+        const route =
+          "https://www.google.com/maps/dir/?api=1&destination="
+          + destination;
+
+        return L.marker([place.lat, place.lng])
+          .addTo(map)
+          .bindPopup(
+            "<strong>" + place.name + "</strong><br>"
+            + place.address + "<br>"
+            + '<a href="tel:' + place.phone + '">'
+            + place.phone + "</a><br>"
+            + "受付方法・条件は施設へ確認<br>"
+            + '<a href="' + route
+            + '" target="_blank" rel="noopener noreferrer">'
+            + "Googleマップで道順を見る</a>"
+          );
+      });
+
+      map.fitBounds(
+        L.featureGroup(markers).getBounds(),
+        { padding: [40, 40], maxZoom: 14 }
+      );
+    }
+  </script>
+</body>
+</html>
